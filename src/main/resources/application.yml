@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: payops-agents
+  threads:
+    virtual:
+      enabled: true
+  ai:
+    mcp:
+      server:
+        type: SYNC
+#    ollama:
+#      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+
+embabel:
+  agent:
+    a2a:
+      enabled: true
+    platform:
+      models:
+        openai:
+          custom:
+            # No defaults on purpose: startup fails fast when the key is missing
+            api-key: ${OPENAI_CUSTOM_API_KEY}
+            # Include /v1: the OpenAI Java SDK only appends /chat/completions (without it every call 404s)
+            base-url: ${OPENAI_CUSTOM_BASE_URL}
+            models: gpt-4o-mini
+  models:
+    defaultLlm: gpt-4o-mini
+#   default-embedding-model: nomic-embed-text:latest
+
+dispute:
+  # demo: sample disputes and an in-memory sink, no Stripe account needed.
+  # stripe: Stripe webhook in, draft evidence written back (use a sk_test_ key).
+  provider: ${DISPUTE_PROVIDER:demo}
+  agent:
+    # Each model must also appear in the provider's models list above
+    extract-llm: gpt-4o-mini
+    draft-llm: gpt-4o-mini
+    auto-decision-limit: 1000   # in the dispute's own currency; larger amounts always need a person
+    min-confidence: 0.7
+    deadline-warning: 2d
+  workflow:
+    publish-decisions: true     # hand every decision to the sinks (Stripe: saves a draft, never submits)
+    auto-approve: false         # approval is final: leave off unless you mean it
+
+# Only read when dispute.provider=stripe. Set STRIPE_API_KEY (and STRIPE_WEBHOOK_SECRET for webhooks).
+stripe:
+  api-key: ${STRIPE_API_KEY:}
+
+server:
+  port: 9091
