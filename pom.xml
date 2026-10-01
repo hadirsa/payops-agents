@@ -19,7 +19,7 @@
 
     <properties>
         <java.version>25</java.version>
-        <embabel-agent.version>1.5.2</embabel-agent.version>
+        <embabel-agent.version>1.5.3-SNAPSHOT</embabel-agent.version>
         <stripe.version>33.4.2</stripe.version>
     </properties>
 
