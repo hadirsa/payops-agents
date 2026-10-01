@@ -91,6 +91,11 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- demo: lets the A2A client and server carry the contextId in OTel baggage (embabel-agent#2038) -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
