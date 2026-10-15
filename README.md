@@ -104,25 +104,27 @@ triaged, `422` no complete dispute could be read from the text, `502` model or o
 
 ## Try it over A2A
 
-The same agent is an [A2A](https://a2a-protocol.org) agent. The card is at `/a2a/.well-known/agent.json` and the
-JSON-RPC endpoint is `/a2a`. A2A takes free text, so the message must contain the whole dispute (id, payment, reason,
-amount with currency, deadline). The decision is flagged `FIGURES_FROM_TEXT` for review, because a model read the figures.
+The same agent is an [A2A](https://a2a-protocol.org) 1.0 agent. The card is at `/a2a/.well-known/agent.json` and the
+JSON-RPC endpoint is `/a2a`. Each request needs the `A2A-Version: 1.0` header: a request without it is an A2A 0.3
+request, which is rejected with `-32009`. A2A takes free text, so the message must contain the whole dispute (id,
+payment, reason, amount with currency, deadline). The decision is flagged `FIGURES_FROM_TEXT` for review, because a
+model read the figures.
 
 ```bash
 # The agent card
 curl -s localhost:9091/a2a/.well-known/agent.json
 
-# message/send: one answer when the work is done (about 6 s with a real model)
-curl -s localhost:9091/a2a -H 'Content-Type: application/json' -d '{
-  "jsonrpc":"2.0","id":"1","method":"message/send",
-  "params":{"message":{"kind":"message","messageId":"m1","role":"user","parts":[
-    {"kind":"text","text":"Dispute dp_demo_not_received on payment ch_demo_2: product not received, 89.90 EUR, reply by 2027-01-15"}]}}}'
+# SendMessage: one answer when the work is done (about 6 s with a real model)
+curl -s localhost:9091/a2a -H 'Content-Type: application/json' -H 'A2A-Version: 1.0' -d '{
+  "jsonrpc":"2.0","id":"1","method":"SendMessage",
+  "params":{"message":{"messageId":"m1","role":"ROLE_USER","parts":[
+    {"text":"Dispute dp_demo_not_received on payment ch_demo_2: product not received, 89.90 EUR, reply by 2027-01-15"}]}}}'
 
-# message/stream: server-sent events. "Task started...", "Processing task...", then the final decision
-curl -s -N localhost:9091/a2a -H 'Content-Type: application/json' -H 'Accept: text/event-stream' -d '{
-  "jsonrpc":"2.0","id":"2","method":"message/stream",
-  "params":{"message":{"kind":"message","messageId":"m2","role":"user","parts":[
-    {"kind":"text","text":"Dispute dp_demo_duplicate on payment ch_demo_3: duplicate charge, 45.00 USD, reply by 2027-01-15"}]}}}'
+# SendStreamingMessage: server-sent events. "Task started...", "Processing task...", then the final decision
+curl -s -N localhost:9091/a2a -H 'Content-Type: application/json' -H 'Accept: text/event-stream' -H 'A2A-Version: 1.0' -d '{
+  "jsonrpc":"2.0","id":"2","method":"SendStreamingMessage",
+  "params":{"message":{"messageId":"m2","role":"ROLE_USER","parts":[
+    {"text":"Dispute dp_demo_duplicate on payment ch_demo_3: duplicate charge, 45.00 USD, reply by 2027-01-15"}]}}}'
 ```
 
 The final status carries a short summary (the decision's `getContent()`); the full structured decision is in the
